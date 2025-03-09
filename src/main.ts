@@ -11,7 +11,7 @@ import { wait } from './wait.js'
 export async function run(): Promise<void> {
   try {
     const ms: string = core.getInput('milliseconds')
-    const token = core.getInput('github-token', { required: true })
+    const token = core.getInput('token')
 
     const octokit = github.getOctokit(token)
     const context = github.context
