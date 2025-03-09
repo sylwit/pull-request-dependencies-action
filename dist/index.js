@@ -31251,7 +31251,7 @@ async function wait(milliseconds) {
 async function run() {
     try {
         const ms = coreExports.getInput('milliseconds');
-        const token = coreExports.getInput('github-token', { required: true });
+        const token = coreExports.getInput('token');
         const octokit = githubExports.getOctokit(token);
         const context = githubExports.context;
         // Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true

@@ -9,6 +9,9 @@ branding:
 
 # Define your inputs here.
 inputs:
+  token:
+    description: 'The token that the action will use to update labels.'
+    default: ${{ github.token }}
   milliseconds:
     description: Your input description here
     required: true
