@@ -1,19 +1,6 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 
-export async function listLabels(
-  octokit,
-  owner: string,
-  repo: string,
-  issue_number: number
-) {
-  return await octokit.issues.listLabelsOnIssue({
-    owner,
-    repo,
-    issue_number
-  })
-}
-
 /**
  * The main function for the action.
  *
@@ -39,8 +26,29 @@ export async function run(): Promise<void> {
       return
     }
 
-    const labels = await listLabels(octokit, owner, repo, prNumber)
-    core.info(`Labels: ${labels}`)
+    // Fetch the labels on the PR and filter directly in the mapping process
+    const { data: labels } = await octokit.rest.issues.listLabelsOnIssue({
+      owner,
+      repo,
+      issue_number: prNumber
+    })
+
+    // Filter labels that start with "depends_on:" during iteration
+    const dependsOnLabels = labels.reduce<string[]>((filtered, label) => {
+      if (label.name.startsWith('depends_on:')) {
+        filtered.push(label.name)
+      }
+      return filtered
+    }, [])
+
+    // Log the filtered labels
+    if (dependsOnLabels.length > 0) {
+      core.info(
+        `Labels starting with "depends_on:": ${dependsOnLabels.join(', ')}`
+      )
+    } else {
+      core.info('No labels starting with "depends_on:" found on this PR.')
+    }
 
     // Set outputs for other workflow steps to use
     core.setOutput('time', new Date().toTimeString())

@@ -31229,14 +31229,6 @@ function requireGithub () {
 
 var githubExports = requireGithub();
 
-async function listLabels(octokit, owner, repo, issue_number) {
-    const labels = await octokit.issues.listLabelsOnIssue({
-        owner,
-        repo,
-        issue_number
-    });
-    return labels;
-}
 /**
  * The main function for the action.
  *
@@ -31258,8 +31250,26 @@ async function run() {
             coreExports.setFailed('No PR number found.');
             return;
         }
-        const labels = await listLabels(octokit, owner, repo, prNumber);
-        coreExports.info(`Labels: ${labels}`);
+        // Fetch the labels on the PR and filter directly in the mapping process
+        const { data: labels } = await octokit.rest.issues.listLabelsOnIssue({
+            owner,
+            repo,
+            issue_number: prNumber
+        });
+        // Filter labels that start with "depends_on:" during iteration
+        const dependsOnLabels = labels.reduce((filtered, label) => {
+            if (label.name.startsWith('depends_on:')) {
+                filtered.push(label.name);
+            }
+            return filtered;
+        }, []);
+        // Log the filtered labels
+        if (dependsOnLabels.length > 0) {
+            coreExports.info(`Labels starting with "depends_on:": ${dependsOnLabels.join(', ')}`);
+        }
+        else {
+            coreExports.info('No labels starting with "depends_on:" found on this PR.');
+        }
         // Set outputs for other workflow steps to use
         coreExports.setOutput('time', new Date().toTimeString());
     }
