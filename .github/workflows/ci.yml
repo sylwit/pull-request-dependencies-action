@@ -2,13 +2,7 @@ name: Continuous Integration
 
 on:
   pull_request:
-    branches:
-      - main
-  label:
-    types: [created, deleted]
-  push:
-    branches:
-      - main
+    types: [labeled, unlabeled, opened, synchronize, reopened, closed]
 
 permissions:
   contents: read
