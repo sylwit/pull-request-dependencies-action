@@ -31229,7 +31229,14 @@ function requireGithub () {
 
 var githubExports = requireGithub();
 
-// import { wait } from './wait.js'
+async function listLabels(octokit, owner, repo, issue_number) {
+    const labels = await octokit.issues.listLabelsOnIssue({
+        owner,
+        repo,
+        issue_number
+    });
+    return labels;
+}
 /**
  * The main function for the action.
  *
@@ -31240,24 +31247,19 @@ async function run() {
         const token = coreExports.getInput('token');
         const octokit = githubExports.getOctokit(token);
         const context = githubExports.context;
-        coreExports.info(`Event Name: ${context.eventName}`);
-        coreExports.info(`Payload: ${context.payload.pull_request}`);
-        // Log the current timestamp, wait, then log the new timestamp
-        // core.debug(new Date().toTimeString())
-        // await wait(parseInt(ms, 10))
-        // core.debug(new Date().toTimeString())
-        const checkRun = await octokit.rest.checks.create({
-            ...context.repo,
-            name: 'My Custom Check',
-            head_sha: context.sha,
-            status: 'completed',
-            conclusion: 'success',
-            output: {
-                title: 'Check Run Results',
-                summary: 'This is a custom check run created by our action.'
-            }
-        });
-        coreExports.info(`Check run created with ID: ${checkRun.data.id}`);
+        if (!context.payload.pull_request) {
+            coreExports.setFailed('This action can only be run on pull request events.');
+            return;
+        }
+        const { owner, repo } = context.repo;
+        const prNumber = context.payload.pull_request.number;
+        coreExports.info(`PR Number: ${prNumber}`);
+        if (!prNumber) {
+            coreExports.setFailed('No PR number found.');
+            return;
+        }
+        const labels = await listLabels(octokit, owner, repo, prNumber);
+        coreExports.info(`Labels: ${labels}`);
         // Set outputs for other workflow steps to use
         coreExports.setOutput('time', new Date().toTimeString());
     }

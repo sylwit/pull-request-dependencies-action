@@ -1,7 +1,18 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 
-// import { wait } from './wait.js'
+export async function listLabels(
+  octokit,
+  owner: string,
+  repo: string,
+  issue_number: number
+) {
+  return await octokit.issues.listLabelsOnIssue({
+    owner,
+    repo,
+    issue_number
+  })
+}
 
 /**
  * The main function for the action.
@@ -15,27 +26,22 @@ export async function run(): Promise<void> {
     const octokit = github.getOctokit(token)
     const context = github.context
 
-    core.info(`Event Name: ${context.eventName}`)
-    core.info(`Payload: ${context.payload.pull_request}`)
+    if (!context.payload.pull_request) {
+      core.setFailed('This action can only be run on pull request events.')
+      return
+    }
 
-    // Log the current timestamp, wait, then log the new timestamp
-    // core.debug(new Date().toTimeString())
-    // await wait(parseInt(ms, 10))
-    // core.debug(new Date().toTimeString())
+    const { owner, repo } = context.repo
+    const prNumber = context.payload.pull_request.number
+    core.info(`PR Number: ${prNumber}`)
+    if (!prNumber) {
+      core.setFailed('No PR number found.')
+      return
+    }
 
-    const checkRun = await octokit.rest.checks.create({
-      ...context.repo,
-      name: 'My Custom Check',
-      head_sha: context.sha,
-      status: 'completed',
-      conclusion: 'success',
-      output: {
-        title: 'Check Run Results',
-        summary: 'This is a custom check run created by our action.'
-      }
-    })
+    const labels = await listLabels(octokit, owner, repo, prNumber)
+    core.info(`Labels: ${labels}`)
 
-    core.info(`Check run created with ID: ${checkRun.data.id}`)
     // Set outputs for other workflow steps to use
     core.setOutput('time', new Date().toTimeString())
   } catch (error) {
