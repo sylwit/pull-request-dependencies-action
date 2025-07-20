@@ -1,4 +1,4 @@
-# Pull Request dependencies Action v2
+# Pull Request dependencies Action v3
 
 [![GitHub Super-Linter](https://github.com/actions/typescript-action/actions/workflows/linter.yml/badge.svg)](https://github.com/super-linter/super-linter)
 ![CI](https://github.com/actions/typescript-action/actions/workflows/ci.yml/badge.svg)
